@@ -45,7 +45,6 @@ class CompareMenu(FloatLayout):
         self.add_widget(self.back_button)
 
 
-
         # First currency selection
         self.currency1_input = TextInput(
             hint_text="Search currency",
@@ -86,6 +85,28 @@ class CompareMenu(FloatLayout):
             size_hint=(None, None),size=(150,50),
         )
         self.add_widget(self.currency2_spinner)
+
+        self.currency1 = TextInput(
+            hint_text="first currency",
+            size_hint=(None, None), size=(150,35),
+            disabled = True,
+            background_color=(24/255, 198/255, 128/255, 1),
+            hint_text_color=('#16c6db'),
+            pos_hint={'center_x': 0.35, 'center_y': 0.5},
+            multiline=False
+        )
+        self.add_widget(self.currency1)
+
+        self.currency2 = TextInput(
+            hint_text="second currency",
+            size_hint=(None, None), size=(150,35),
+            disabled = True,
+            background_color=(24/255, 198/255, 128/255, 1),
+            hint_text_color=('#16c6db'),
+            pos_hint={'center_x': 0.65, 'center_y': 0.5},
+            multiline=False
+        )
+        self.add_widget(self.currency2)
 
 
         self.back_button = Button(
