@@ -4,3 +4,4 @@ all_rates = []
 
 selected_currency1 = ""
 selected_currency2 = ""
+amount = 1
