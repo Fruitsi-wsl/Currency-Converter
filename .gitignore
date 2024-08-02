@@ -1,0 +1,27 @@
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environment directories
+*.env
+*.venv
+env/
+venv/
+
+# Ignore distribution and build directories
+dist/
+build/
+
+# Ignore editor and IDE files
+*.swp
+*.swo
+*.DS_Store
+close-up-of-tulips-blooming-in-field-royalty-free-image-1584131603.jpg
+
+__init__.py
+*.spec
+*app.log
+*.exe
+*.ico
