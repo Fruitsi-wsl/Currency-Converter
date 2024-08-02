@@ -19,6 +19,8 @@ image_path = os.path.join(current_dir, "Image Resources/background1.jpg" )
 
 API_KEY = 'cb0c995beeb4118248dd2566'
 
+
+
 class CompareMenu(FloatLayout):
     def __init__(self, **kwargs):
         super(CompareMenu, self).__init__(**kwargs)
@@ -91,10 +93,10 @@ class CompareMenu(FloatLayout):
         self.selected_currency1 = ""
         self.selected_currency2 = ""
 
-        self.currency1 = TextInput(
-            hint_text= "",
+        self.currency1 = CurrencyTextInput(
+            prefix = "",
             size_hint=(None, None), size=(150,35),
-            disabled = True,
+            disabled = False,
             background_color=(24/255, 198/255, 128/255, 1),
             hint_text_color=('#16c6db'),
             pos_hint={'center_x': 0.35, 'center_y': 0.5},
@@ -102,10 +104,10 @@ class CompareMenu(FloatLayout):
         )
         self.add_widget(self.currency1)
 
-        self.currency2 = TextInput(
-            hint_text= "",
+        self.currency2 = CurrencyTextInput(
+            prefix = "",
             size_hint=(None, None), size=(150,35),
-            disabled = True,
+            disabled = False,
             background_color=(24/255, 198/255, 128/255, 1),
             hint_text_color=('#16c6db'),
             pos_hint={'center_x': 0.65, 'center_y': 0.5},
@@ -124,7 +126,7 @@ class CompareMenu(FloatLayout):
 
 
         self.exchange_rate = TextInput(
-            hint_text= "",
+            hint_text = "",
             size_hint=(None, None), size=(150,35),
             disabled = True,
             background_color=(24/255, 198/255, 128/255, 1),
@@ -153,14 +155,17 @@ class CompareMenu(FloatLayout):
 
 
     def update_selected_currencies(self, instance=None, value=''):
-        self.selected_currency1 = self.currency1_spinner.text
-        self.selected_currency2 = self.currency2_spinner.text
-        if self.selected_currency1 != "Select Currency":
-            self.currency1.hint_text = self.selected_currency1
-        if self.selected_currency2 != "Select Currency":
-            self.currency2.hint_text = self.selected_currency2
-        if self.selected_currency1 and self.selected_currency2 != "Select Currency":
-            self.rate =self.fetch_selected_exchange_rates()
+        shared_variables.selected_currency1 = self.currency1_spinner.text
+        shared_variables.selected_currency2 = self.currency2_spinner.text
+        
+        if shared_variables.selected_currency1 != "Select Currency":
+            self.currency1.prefix = shared_variables.selected_currency1 + " "
+        
+        if shared_variables.selected_currency2 != "Select Currency":
+            self.currency2.prefix = shared_variables.selected_currency2 + " "
+        
+        if shared_variables.selected_currency1 and shared_variables.selected_currency2 != "Select Currency":
+            self.rate = self.fetch_selected_exchange_rates()
             self.exchange_rate.hint_text = str(self.rate)
 
 
@@ -177,7 +182,7 @@ class CompareMenu(FloatLayout):
 
     def fetch_selected_exchange_rates(self):
         try:
-            data = get_specific_rates(API_KEY, self.selected_currency1, self.selected_currency2)
+            data = get_specific_rates(API_KEY, shared_variables.selected_currency1, shared_variables.selected_currency2)
             return data.get('conversion_rate')
 
         except requests.RequestException as e:
@@ -198,3 +203,39 @@ class CompareMenu(FloatLayout):
     def on_back_button_press(self, instance):
         app = App.get_running_app()
         app.screen_manager.current = 'start_menu'
+
+class CurrencyTextInput(TextInput):
+    def __init__(self, prefix="", **kwargs):
+        self._prefix = prefix
+        super(CurrencyTextInput, self).__init__(**kwargs)
+        self.update_text()
+
+    def update_text(self):
+        # Ensure the prefix is correctly placed
+        self.text = self._prefix + ''.join(char for char in self.text[len(self._prefix):] if char.isdigit() or char in '.')
+
+    def insert_text(self, substring, from_undo=False):
+        # Filter out non-numeric input
+        filtered_substring = ''.join(char for char in substring if char.isdigit() or char in '.')
+        # Insert text while maintaining prefix and numeric input
+        if self.text.startswith(self._prefix):
+            super(CurrencyTextInput, self).insert_text(filtered_substring, from_undo)
+        else:
+            self.text = self._prefix + filtered_substring
+
+    def on_text(self, instance, value):
+        # Ensure text always starts with the prefix and only contains numbers after it
+        if not value.startswith(self._prefix):
+            self.update_text()
+        else:
+            valid_text = self._prefix + ''.join(char for char in value[len(self._prefix):] if char.isdigit() or char in '.')
+            self.text = valid_text
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @prefix.setter
+    def prefix(self, value):
+        self._prefix = value
+        self.update_text()
