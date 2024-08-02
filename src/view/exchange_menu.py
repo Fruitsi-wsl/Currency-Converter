@@ -9,7 +9,7 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.boxlayout import BoxLayout
-from kivy.graphics import Color, Rectangle
+from kivy.graphics import Color, RoundedRectangle
 from model.get_exchange_rate_data import fetch_exchange_rates
 from kivy.uix.widget import Widget
 
@@ -20,7 +20,34 @@ image_path = os.path.join(current_dir, "Image Resources/background1.jpg" )
 API_KEY = 'cb0c995beeb4118248dd2566'
 
 
+class RateItem(BoxLayout):
+    def __init__(self, currency, rate, **kwargs):
+        super(RateItem, self).__init__(**kwargs)
+        self.orientation = 'horizontal'
+        self.size_hint_y = None
+        self.height = 50
+        self.padding = 10
+        self.spacing = 10
 
+        with self.canvas.before:
+            Color(24/255, 198/255, 128/255, 1)
+            self.rect = RoundedRectangle(
+                size=(self.width * 0.5 , self.height), 
+                pos=(self.x + (self.width - self.width * 0.8) / 2, self.y), 
+                radius=[10])
+        self.bind(size=self._update_rect, pos=self._update_rect)
+
+        rate_label = Label(
+            text=f"{currency}: {rate:.2f}",
+            size_hint=(1, 1),
+            color=("#0b1a24")
+        )
+        self.add_widget(rate_label)
+
+    def _update_rect(self, instance, value):
+        width = instance.size[0] * 0.5  # Adjust width dynamically
+        self.rect.pos = (instance.pos[0] + (instance.size[0] - width) / 2, instance.pos[1])  # Centered position
+        self.rect.size = (width, instance.size[1]) 
 
 class ExchangeMenu(FloatLayout):
     def __init__(self, **kwargs):
@@ -64,42 +91,24 @@ class ExchangeMenu(FloatLayout):
         
     def update_exchange_rates(self):
         try:
-            data = fetch_exchange_rates(API_KEY)  # Use the function to get data
+            data = fetch_exchange_rates(API_KEY)
             rates = data.get('conversion_rates', {})
 
             # Clear previous entries
             self.box_layout.clear_widgets()
 
-            # Add new exchange rate items with styling
+            # Add new exchange rate items
             for currency, rate in rates.items():
-                rate_box = BoxLayout(size_hint_y=None, height=50, padding=10, spacing=10)
-
-                # Apply canvas instructions for each BoxLayout
-                with rate_box.canvas.before:
-                    Color(0.1, 0.1, 0.1, 0.3)  # Background color
-                    self.rect = Rectangle(size=rate_box.size, pos=rate_box.pos)
-                rate_box.bind(size=self._update_rect, pos=self._update_rect)
-
-                rate_label = Label(
-                    text=f"{currency}: {rate:.2f}",
-                    size_hint=(1, 1),
-                    color=(1, 1, 1, 1)  # White color for text
-                )
-                rate_label.size_hint = (1, 1)
-                rate_box.add_widget(rate_label)
-                self.box_layout.add_widget(rate_box)
+                rate_item = RateItem(currency, rate)
+                self.box_layout.add_widget(rate_item)
         except requests.RequestException as e:
-            # Handle request errors here
             error_label = Label(
                 text=f"Error fetching rates: {e}",
                 size_hint_y=None, height=40,
-                color=(1, 0, 0, 1)  # Red color for errors
+                color=(1, 0, 0, 1)
             )
             self.box_layout.add_widget(error_label)
 
-    def _update_rect(self, instance, value):
-        self.rect.pos = instance.pos
-        self.rect.size = instance.size
 
     def on_back_button_press(self, instance):
         app = App.get_running_app()
