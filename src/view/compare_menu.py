@@ -10,7 +10,7 @@ from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.spinner import Spinner
-from model.get_exchange_rate_data import fetch_exchange_rates
+from model.get_exchange_rate_data import fetch_exchange_rates, get_specific_rates
 from controller import shared_variables as shared_variables
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -64,6 +64,7 @@ class CompareMenu(FloatLayout):
             pos_hint={'center_x': 0.35, 'center_y': 0.7}
             
         )
+        self.currency1_spinner.bind(text=self.update_selected_currencies)
         self.add_widget(self.currency1_spinner)
 
         # Second currency selection
@@ -84,10 +85,14 @@ class CompareMenu(FloatLayout):
             pos_hint={'center_x': 0.65, 'center_y': 0.7},
             size_hint=(None, None),size=(150,50),
         )
+        self.currency2_spinner.bind(text=self.update_selected_currencies)
         self.add_widget(self.currency2_spinner)
 
+        self.selected_currency1 = ""
+        self.selected_currency2 = ""
+
         self.currency1 = TextInput(
-            hint_text="first currency",
+            hint_text= "",
             size_hint=(None, None), size=(150,35),
             disabled = True,
             background_color=(24/255, 198/255, 128/255, 1),
@@ -98,7 +103,7 @@ class CompareMenu(FloatLayout):
         self.add_widget(self.currency1)
 
         self.currency2 = TextInput(
-            hint_text="second currency",
+            hint_text= "",
             size_hint=(None, None), size=(150,35),
             disabled = True,
             background_color=(24/255, 198/255, 128/255, 1),
@@ -107,6 +112,27 @@ class CompareMenu(FloatLayout):
             multiline=False
         )
         self.add_widget(self.currency2)
+
+
+        self.add_label = Label(
+            text="Exchange rate", font_size='24sp',
+            color=(24/255, 198/255, 128/255, 1),
+            size_hint=(None, None), size=(200, 50),
+            pos_hint={'center_x': 0.5, 'center_y': 0.38}
+        )
+        self.add_widget(self.add_label)
+
+
+        self.exchange_rate = TextInput(
+            hint_text= "",
+            size_hint=(None, None), size=(150,35),
+            disabled = True,
+            background_color=(24/255, 198/255, 128/255, 1),
+            hint_text_color=('#16c6db'),
+            pos_hint={'center_x': 0.5, 'center_y': 0.3},
+            multiline=False
+        )
+        self.add_widget(self.exchange_rate)
 
 
         self.back_button = Button(
@@ -126,12 +152,38 @@ class CompareMenu(FloatLayout):
 
 
 
+    def update_selected_currencies(self, instance=None, value=''):
+        self.selected_currency1 = self.currency1_spinner.text
+        self.selected_currency2 = self.currency2_spinner.text
+        if self.selected_currency1 != "Select Currency":
+            self.currency1.hint_text = self.selected_currency1
+        if self.selected_currency2 != "Select Currency":
+            self.currency2.hint_text = self.selected_currency2
+        if self.selected_currency1 and self.selected_currency2 != "Select Currency":
+            self.rate =self.fetch_selected_exchange_rates()
+            self.exchange_rate.hint_text = str(self.rate)
+
+
+
+
+
     def fetch_initial_exchange_rates(self):
         try:
             data = fetch_exchange_rates(API_KEY)
             return data.get('conversion_rates', {}).keys()
         except requests.RequestException as e:
             return []
+        
+
+    def fetch_selected_exchange_rates(self):
+        try:
+            data = get_specific_rates(API_KEY, self.selected_currency1, self.selected_currency2)
+            return data.get('conversion_rate')
+
+        except requests.RequestException as e:
+            return []
+    
+
 
     def update_currency1_options(self, instance=None, value=''):
         search_query = value.upper()
