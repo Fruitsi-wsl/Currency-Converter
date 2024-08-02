@@ -9,9 +9,11 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.textinput import TextInput
 from kivy.graphics import Color, RoundedRectangle
 from model.get_exchange_rate_data import fetch_exchange_rates
 from kivy.uix.widget import Widget
+from controller import shared_variables as shared_variables
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -23,6 +25,7 @@ API_KEY = 'cb0c995beeb4118248dd2566'
 class RateItem(BoxLayout):
     def __init__(self, currency, rate, **kwargs):
         super(RateItem, self).__init__(**kwargs)
+        self.currency = currency
         self.orientation = 'horizontal'
         self.size_hint_y = None
         self.height = 50
@@ -64,14 +67,27 @@ class ExchangeMenu(FloatLayout):
             pos_hint={'center_x': 0.5, 'top': 1}
         ))
 
+        
+        
+        self.search_input = TextInput(
+            hint_text= "Enter currency code",
+            size_hint=(0.2, 0.05),
+            pos_hint={'center_x': 0.5, 'top': 0.9},
+            multiline=False
+        )
+        self.search_input.bind(text=self.on_search_text)
+        self.add_widget(self.search_input)
+
         # Create a ScrollView
-        self.scroll_view = ScrollView(size_hint=(0.9, 0.7), pos_hint={'center_x': 0.5, 'center_y': 0.6},
+        self.scroll_view = ScrollView(size_hint=(0.9, 0.7), pos_hint={'center_x': 0.5, 'center_y': 0.4},
                                       do_scroll_x=False, do_scroll_y=True)
         
         # Create a BoxLayout to hold the exchange rate labels
         self.box_layout = BoxLayout(orientation='vertical', padding=10, spacing=10, size_hint_y=None)
         self.box_layout.bind(minimum_height=self.box_layout.setter('height'))
 
+
+        
         # Fetch and display exchange rates
         self.update_exchange_rates()
 
@@ -96,10 +112,12 @@ class ExchangeMenu(FloatLayout):
 
             # Clear previous entries
             self.box_layout.clear_widgets()
+            shared_variables.all_rates = []
 
             # Add new exchange rate items
             for currency, rate in rates.items():
                 rate_item = RateItem(currency, rate)
+                shared_variables.all_rates.append(rate_item)
                 self.box_layout.add_widget(rate_item)
         except requests.RequestException as e:
             error_label = Label(
@@ -109,6 +127,12 @@ class ExchangeMenu(FloatLayout):
             )
             self.box_layout.add_widget(error_label)
 
+    def on_search_text(self, instance, value):
+        search_query = value.upper()
+        self.box_layout.clear_widgets()
+        for rate_item in shared_variables.all_rates:
+            if search_query in rate_item.currency:
+                self.box_layout.add_widget(rate_item)
 
     def on_back_button_press(self, instance):
         app = App.get_running_app()
