@@ -109,22 +109,13 @@ class CompareMenu(FloatLayout):
         self.currency2 = CurrencyTextInput(
             prefix = "",
             size_hint=(None, None), size=(150,35),
-            disabled = False,
+            disabled = True,
             background_color=(24/255, 198/255, 128/255, 1),
             hint_text_color=('#16c6db'),
             pos_hint={'center_x': 0.65, 'center_y': 0.5},
             multiline=False
         )
         self.add_widget(self.currency2)
-
-
-        self.add_label = Label(
-            text="Exchange rate", font_size='24sp',
-            color=(24/255, 198/255, 128/255, 1),
-            size_hint=(None, None), size=(200, 50),
-            pos_hint={'center_x': 0.5, 'center_y': 0.38}
-        )
-        self.add_widget(self.add_label)
 
 
         self.back_button = Button(
