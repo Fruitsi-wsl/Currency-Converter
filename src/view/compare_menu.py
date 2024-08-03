@@ -24,6 +24,7 @@ API_KEY = 'cb0c995beeb4118248dd2566'
 class CompareMenu(FloatLayout):
     def __init__(self, **kwargs):
         super(CompareMenu, self).__init__(**kwargs)
+        self.updating_text = False
 
         self.background = Image(source=image_path, allow_stretch=True, keep_ratio=False)
         self.add_widget(self.background)
@@ -66,7 +67,7 @@ class CompareMenu(FloatLayout):
             pos_hint={'center_x': 0.35, 'center_y': 0.7}
             
         )
-        self.currency1_spinner.bind(text=self.update_selected_currencies)
+        self.currency1_spinner.bind(text=self.update_selected_currency1)
         self.add_widget(self.currency1_spinner)
 
         # Second currency selection
@@ -87,7 +88,7 @@ class CompareMenu(FloatLayout):
             pos_hint={'center_x': 0.65, 'center_y': 0.7},
             size_hint=(None, None),size=(150,50),
         )
-        self.currency2_spinner.bind(text=self.update_selected_currencies)
+        self.currency2_spinner.bind(text=self.update_selected_currency2)
         self.add_widget(self.currency2_spinner)
 
         self.selected_currency1 = ""
@@ -102,6 +103,7 @@ class CompareMenu(FloatLayout):
             pos_hint={'center_x': 0.35, 'center_y': 0.5},
             multiline=False
         )
+        self.currency1.bind(text=self.on_currency1_text_change)
         self.add_widget(self.currency1)
 
         self.currency2 = CurrencyTextInput(
@@ -125,18 +127,6 @@ class CompareMenu(FloatLayout):
         self.add_widget(self.add_label)
 
 
-        self.exchange_rate = TextInput(
-            hint_text = "",
-            size_hint=(None, None), size=(150,35),
-            disabled = True,
-            background_color=(24/255, 198/255, 128/255, 1),
-            hint_text_color=('#16c6db'),
-            pos_hint={'center_x': 0.5, 'center_y': 0.3},
-            multiline=False
-        )
-        self.add_widget(self.exchange_rate)
-
-
         self.back_button = Button(
             text="Back",
             background_color=(24/255, 198/255, 128/255, 1),
@@ -153,20 +143,37 @@ class CompareMenu(FloatLayout):
         self.update_currency2_options()
 
 
+    def on_currency1_text_change(self, instance, value):
+        if not self.updating_text:
+            shared_variables.amount = self.currency1.get_numeric_value()
+            if shared_variables.selected_currency1 and shared_variables.selected_currency2 != "Select Currency" and shared_variables.amount != "":
+                self.rate = self.fetch_selected_exchange_rates()
+                self.currency2.text = f"{self.currency2.prefix}{str(self.rate)}"
 
-    def update_selected_currencies(self, instance=None, value=''):
+
+
+    def update_selected_currency1(self, instance=None, value=''):
         shared_variables.selected_currency1 = self.currency1_spinner.text
-        shared_variables.selected_currency2 = self.currency2_spinner.text
         
         if shared_variables.selected_currency1 != "Select Currency":
+            self.updating_text = True
             self.currency1.prefix = shared_variables.selected_currency1 + " "
+            self.currency1.text = f"{self.currency1.prefix}{shared_variables.amount}"
+            if shared_variables.selected_currency1 and shared_variables.selected_currency2 != "Select Currency" and shared_variables.amount != "":
+                self.rate = self.fetch_selected_exchange_rates()
+                self.currency2.text = f"{self.currency2.prefix}{str(self.rate)}"
+            self.updating_text = False
+        
+
+    def update_selected_currency2(self, instance=None, value=''):
+        shared_variables.selected_currency2 = self.currency2_spinner.text
+        if shared_variables.selected_currency1 and shared_variables.selected_currency2 != "Select Currency" and shared_variables.amount != "":
+            self.rate = self.fetch_selected_exchange_rates()
+            self.currency2.text = f"{self.currency2.prefix}{str(self.rate)}"
+        
         
         if shared_variables.selected_currency2 != "Select Currency":
             self.currency2.prefix = shared_variables.selected_currency2 + " "
-        
-        if shared_variables.selected_currency1 and shared_variables.selected_currency2 != "Select Currency":
-            self.rate = self.fetch_selected_exchange_rates()
-            self.exchange_rate.hint_text = str(self.rate)
 
 
 
@@ -182,8 +189,8 @@ class CompareMenu(FloatLayout):
 
     def fetch_selected_exchange_rates(self):
         try:
-            data = get_specific_rates(API_KEY, shared_variables.selected_currency1, shared_variables.selected_currency2)
-            return data.get('conversion_rate')
+            data = get_specific_rates(API_KEY, shared_variables.selected_currency1, shared_variables.selected_currency2,shared_variables.amount)
+            return data.get('conversion_result')
 
         except requests.RequestException as e:
             return []
@@ -201,35 +208,54 @@ class CompareMenu(FloatLayout):
         self.currency2_spinner.values = filtered_currencies
 
     def on_back_button_press(self, instance):
+        self.updating_text = True
+        shared_variables.amount = ""
+        shared_variables.selected_currency1 = "Select Currency"
+        shared_variables.selected_currency2 = "Select Currency"
+
+        self.currency1_spinner.text = "Select Currency"
+        self.currency2_spinner.text = "Select Currency"
+
+        self.currency1.prefix = ""
+        self.currency1.text = ""
+
+        self.currency2.prefix = ""
+        self.currency2.text = ""
+        
+        self.currency1_input.text = ""
+        self.currency2_input.text = ""
+
+        self.updating_text = False
+
         app = App.get_running_app()
         app.screen_manager.current = 'start_menu'
+
+
+
+
+
 
 class CurrencyTextInput(TextInput):
     def __init__(self, prefix="", **kwargs):
         self._prefix = prefix
         super(CurrencyTextInput, self).__init__(**kwargs)
-        self.update_text()
-
-    def update_text(self):
-        # Ensure the prefix is correctly placed
-        self.text = self._prefix + ''.join(char for char in self.text[len(self._prefix):] if char.isdigit() or char in '.')
+        self.text = self._prefix  # Initialize with the prefix
 
     def insert_text(self, substring, from_undo=False):
-        # Filter out non-numeric input
-        filtered_substring = ''.join(char for char in substring if char.isdigit() or char in '.')
-        # Insert text while maintaining prefix and numeric input
-        if self.text.startswith(self._prefix):
-            super(CurrencyTextInput, self).insert_text(filtered_substring, from_undo)
-        else:
-            self.text = self._prefix + filtered_substring
+        if not self.text.startswith(self._prefix):
+            self.text = self._prefix
+
+        insertion_point = self.cursor_index()
+        if insertion_point < len(self._prefix):
+            return
+
+        filtered_substring = ''.join([char for char in substring if char.isdigit() or char == '.'])
+        new_text = self.text[:insertion_point] + filtered_substring + self.text[insertion_point:]
+        self.text = new_text
 
     def on_text(self, instance, value):
-        # Ensure text always starts with the prefix and only contains numbers after it
         if not value.startswith(self._prefix):
-            self.update_text()
-        else:
-            valid_text = self._prefix + ''.join(char for char in value[len(self._prefix):] if char.isdigit() or char in '.')
-            self.text = valid_text
+            self.text = self._prefix
 
     @property
     def prefix(self):
@@ -238,4 +264,11 @@ class CurrencyTextInput(TextInput):
     @prefix.setter
     def prefix(self, value):
         self._prefix = value
-        self.update_text()
+        self.text = self._prefix
+
+    def get_numeric_value(self):
+        numeric_part = self.text[len(self._prefix):].strip()
+
+        return numeric_part 
+
+
