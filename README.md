@@ -13,7 +13,7 @@ To get started with the App, follow the steps below:
 
 ## 2.Navigate to Project Directory:
 
- * ```bash cd Currency-Converter```
+ * ```bash cd Currency-Converter``` 
 
 ## 3.Install Dependancies:
 
@@ -24,5 +24,3 @@ make sure you have pip installed, then run:
 ## 4.Run the program:
 
  * ```bash ./src/main.py```
-
-
