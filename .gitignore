@@ -25,3 +25,5 @@ __init__.py
 *app.log
 *.exe
 *.ico
+config.ini
+*.blob

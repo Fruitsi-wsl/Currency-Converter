@@ -12,12 +12,13 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.spinner import Spinner
 from model.get_exchange_rate_data import fetch_exchange_rates, get_specific_rates
 from controller import shared_variables as shared_variables
+from model.dkI import get_api_key
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 image_path = os.path.join(current_dir, "Image Resources/background1.jpg" )
 
-API_KEY = 'cb0c995beeb4118248dd2566'
+API_KEY = get_api_key()
 
 
 

@@ -14,12 +14,13 @@ from kivy.graphics import Color, RoundedRectangle
 from model.get_exchange_rate_data import fetch_exchange_rates
 from kivy.uix.widget import Widget
 from controller import shared_variables as shared_variables
+from model.dkI import get_api_key
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 image_path = os.path.join(current_dir, "Image Resources/background1.jpg" )
 
-API_KEY = 'cb0c995beeb4118248dd2566'
+API_KEY = get_api_key()
 
 
 class RateItem(BoxLayout):
