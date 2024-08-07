@@ -4,6 +4,8 @@ import sys
 import os
 import kivy
 import requests
+import cryptography
+import win32crypt
 
 #set up path to include src and subdirectories for imports in other scripts
 current_dir = os.path.dirname(os.path.abspath(__file__))
