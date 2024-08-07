@@ -9,20 +9,28 @@ To get started with the App, follow the steps below:
 
 ## 1.Clone the repository:
 
- * ```git clone https://github.com/Fruitsi-wsl/Currency-Converter.git```
+ * ```
+git clone https://github.com/Fruitsi-wsl/Currency-Converter.git
+```
 
 ## 2.Navigate to Project Directory:
 
- * ```cd Currency-Converter```
+ * ```
+cd Currency-Converter
+```
 
 ## 3.Install Dependancies:
 
 make sure you have pip installed, then run:
 
- * ```pip install -r requirements.txt```
+ * ```
+pip install -r requirements.txt
+```
 
 ## 4.Run the program:
 
- * ```./src/main.py```
+ * ```
+./src/main.py
+```
 
 
