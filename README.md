@@ -27,10 +27,10 @@ make sure you have pip installed, then run:
 pip install -r requirements.txt
 ```
 
-## 4.Run the program:
+## 4.Run the program from within the src folder:
 
 ```
-./src/main.py
+python main.py
 ```
 
 
